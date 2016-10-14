@@ -1,0 +1,2 @@
+Install ginga, e.g.
+	conda install --channel https://conda.anaconda.org/astropy ginga
