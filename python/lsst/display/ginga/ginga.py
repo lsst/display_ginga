@@ -100,6 +100,7 @@ class DisplayImpl(virtualDevice.DisplayImpl):
                                            verbose=False)
         self._canvas = self.display.add_canvas()
         #self.display.configure_surface(100, 100) # so show() won't fail
+        self.display.ipg_parent.pixel_base = 0.0 # 0-indexed coordinates
 
         # JPEG is faster, PNG looks better
         canvas_types = ('jpeg', 'png',)
