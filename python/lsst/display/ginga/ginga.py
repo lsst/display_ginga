@@ -153,20 +153,16 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         if image:
             # We'd call
             #   self.display.load_data(image.getArray())
-            # except that we want to include the wcs metadata
+            # except that we want to include the wcs
             #
             # Still need to handle the title
-            
+            #
             from ginga import AstroImage
 
-            md = wcs.getFitsMetadata().toDict() if wcs else None
-            if True and md:
-                for key in md.keys():
-                    if re.search(r"^([AB]|[AB]P)_", key):
-                        del md[key]
-
             astroImage = AstroImage.AstroImage(logger=self.display.logger,
-                                               data_np=image.getArray(), metadata=md)
+                                               data_np=image.getArray())
+            if wcs is not None:
+                astroImage.set_wcs(WcsAdaptorForGinga(wcs))
 
             self.display.set_image(astroImage)
 
@@ -275,3 +271,25 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         x, y = self.display.get_pan()        
 
         return GingaEvent(k, x, y)
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class WcsAdaptorForGinga(object):
+    """A class to adapt the LSST Wcs class for Ginga"""
+    def __init__(self, wcs):
+        self._wcs = wcs
+
+    def pixtoradec(self, idxs, coords='data'):
+        """Return (ra, dec) in degrees given a position in pixels"""
+        ra, dec = self._wcs.pixelToSky(*idxs)
+
+        return ra.asDegrees(), dec.asDegrees()
+
+    def pixtosystem(self, idxs, system=None, coords='data'):
+        """I'm not sure if ginga really needs this; equivalent to self.pixtoradec()"""
+        return self.pixtoradec(idxs, coords=coords)
+
+    def radectopix(self, ra_deg, dec_deg, coords='data', naxispath=None):
+        """Return (x, y) in pixels given (ra, dec) in degrees"""
+
+        return wcs.skyToPixel(ra_deg*afwGeom.degrees, dec_deg*afwGeom.degrees)
