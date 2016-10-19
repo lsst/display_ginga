@@ -85,7 +85,13 @@ class DisplayImpl(virtualDevice.DisplayImpl):
 
     def __init__(self, display, verbose=False, open=False,
                  host='localhost', port=9914, use_opencv=False, no_ioloop=True,
+                 canvas_format='jpeg',
                  *args, **kwargs):
+        """
+        Initialise a ginga display
+
+        canvas_type  file type for displays ('jpeg': fast; 'png' : better, slow)
+        """
         if not DisplayImpl.server:
             DisplayImpl.server = ipg.make_server(host=host, port=port, use_opencv=use_opencv)
             DisplayImpl.server.start(no_ioloop=no_ioloop)
@@ -94,6 +100,14 @@ class DisplayImpl(virtualDevice.DisplayImpl):
                                            verbose=False)
         self._canvas = self.display.add_canvas()
         #self.display.configure_surface(100, 100) # so show() won't fail
+
+        # JPEG is faster, PNG looks better
+        canvas_types = ('jpeg', 'png',)
+        if canvas_format in canvas_types:
+            settings = self.display.get_settings()
+            settings.set(html5_canvas_format=canvas_format)
+        else:
+            print("Unknown format \"%s\" (allowed: \"%s\")" % (canvas_format, '", "'.join(canvas_types)))
         #
         # This may not be necessary, but the worst case is that the user has to close a tab
         #
