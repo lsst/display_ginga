@@ -130,6 +130,14 @@ class DisplayImpl(virtualDevice.DisplayImpl):
             DisplayImpl.server.stop()
             DisplayImpl.server = None
 
+    def show_color_bar(show=True):
+        """Show (or hide) the colour bar"""
+        self.display.show_color_bar(show)
+
+    def show_pan_mark(show=True, color='red'):
+        """Show (or hide) the colour bar"""
+        self.display.show_pan_mark(show, color)
+
     def _close(self):
         """Called when the device is closed"""
         pass
