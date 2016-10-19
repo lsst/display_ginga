@@ -118,13 +118,6 @@ class DisplayImpl(virtualDevice.DisplayImpl):
     #
     # Extensions to the API
     #
-    def embed(self):
-        """Embed a display in a jupyter notebook
-
-        N.b. Doesn't work; the embed() call appears to have to be in the top-level cell
-        """
-        self.display.embed()
-
     def get_viewer(self):
         """Return the ginga viewer
         """
