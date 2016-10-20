@@ -96,33 +96,34 @@ class DisplayImpl(virtualDevice.DisplayImpl):
             DisplayImpl.server = ipg.make_server(host=host, port=port, use_opencv=use_opencv)
             DisplayImpl.server.start(no_ioloop=no_ioloop)
 
-        virtualDevice.DisplayImpl.__init__(self, DisplayImpl.server.get_viewer(str(display.frame)),
-                                           verbose=False)
-        self._canvas = self.display.add_canvas()
+        virtualDevice.DisplayImpl.__init__(self, display, verbose=False)
+        self._viewer = DisplayImpl.server.get_viewer(str(display.frame))
+        self._canvas = self._viewer.add_canvas()
         self._canvas.enable_draw(False)
-        self.display.ipg_parent.pixel_base = 0.0 # 0-indexed coordinates
+        self._viewer.ipg_parent.pixel_base = 0.0 # 0-indexed coordinates
 
         # JPEG is faster, PNG looks better
         canvas_types = ('jpeg', 'png',)
         if canvas_format in canvas_types:
-            settings = self.display.get_settings()
+            settings = self._viewer.get_settings()
             settings.set(html5_canvas_format=canvas_format)
         else:
-            print("Unknown format \"%s\" (allowed: \"%s\")" % (canvas_format, '", "'.join(canvas_types)))
+            print("Unknown format \"%s\" (allowed: \"%s\")" % (canvas_format, '", "'.join(canvas_types)),
+                  file=sys.stderr)
         #
         # This may not be necessary, but the worst case is that the user has to close a tab
         #
         # N.b. the user may well want to call Display.embed() (a ginga specific call)
         #
         if open:
-            self.display.open()
+            self._viewer.open()
     #
     # Extensions to the API
     #
     def get_viewer(self):
         """Return the ginga viewer
         """
-        return self.display
+        return self._viewer
 
     def shutdown_server(self):
         """Shutdown the ginga server
@@ -133,11 +134,11 @@ class DisplayImpl(virtualDevice.DisplayImpl):
 
     def show_color_bar(show=True):
         """Show (or hide) the colour bar"""
-        self.display.show_color_bar(show)
+        self._viewer.show_color_bar(show)
 
     def show_pan_mark(show=True, color='red'):
         """Show (or hide) the colour bar"""
-        self.display.show_pan_mark(show, color)
+        self._viewer.show_pan_mark(show, color)
 
     def _close(self):
         """Called when the device is closed"""
@@ -146,7 +147,7 @@ class DisplayImpl(virtualDevice.DisplayImpl):
     def _setMaskTransparency(self, transparency, maskplane):
         """Specify mask transparency (percent); or None to not set it when loading masks"""
         if maskplane != None:
-            print("ginga is unable to set transparency for individual maskplanes" % maskplane,
+            print("display_ginga is not yet able to set transparency for individual maskplanes" % maskplane,
                   file=sys.stderr)
             return
 
@@ -161,19 +162,19 @@ class DisplayImpl(virtualDevice.DisplayImpl):
 
         if image:
             # We'd call
-            #   self.display.load_data(image.getArray())
+            #   self._viewer.load_data(image.getArray())
             # except that we want to include the wcs
             #
             # Still need to handle the title
             #
             from ginga import AstroImage
 
-            astroImage = AstroImage.AstroImage(logger=self.display.logger,
+            astroImage = AstroImage.AstroImage(logger=self._viewer.logger,
                                                data_np=image.getArray())
             if wcs is not None:
                 astroImage.set_wcs(WcsAdaptorForGinga(wcs))
 
-            self.display.set_image(astroImage)
+            self._viewer.set_image(astroImage)
 
         if mask:
             print("Mask displays are not yet supported in Ginga")
@@ -244,32 +245,42 @@ class DisplayImpl(virtualDevice.DisplayImpl):
     # Set gray scale
     #
     def _scale(self, algorithm, min, max, unit, *args, **kwargs):
-        self.display.set_color_map('gray')
-        self.display.set_color_algorithm(algorithm)
+        self._viewer.set_color_map('gray')
+        self._viewer.set_color_algorithm(algorithm)
 
         if min == "zscale":
-            self.display.set_autocut_params('zscale', contrast=0.25)
-            self.display.auto_levels()
+            self._viewer.set_autocut_params('zscale', contrast=0.25)
+            self._viewer.auto_levels()
         elif min == "minmax":
-            self.display.set_autocut_params('minmax')
-            self.display.auto_levels()
+            self._viewer.set_autocut_params('minmax')
+            self._viewer.auto_levels()
         else:
             if unit:
-                print("ginga: ignoring scale unit %s" % unit)
+                print("ginga: ignoring scale unit %s" % unit, file=sys.stderr)
 
-            self.display.cut_levels(min, max)
+            self._viewer.cut_levels(min, max)
+    def _show(self):
+        """Show the requested display
+
+        In this case, embed it in the notebook (equivalent to Display.get_viewer().show();
+        see also Display.get_viewer().embed()
+
+        N.b.  These command *must* be the last entry in their cell
+        """
+
+        return self._viewer.show()
     #
     # Zoom and Pan
     #
     def _zoom(self, zoomfac):
         """Zoom by specified amount"""
 
-        self.display.scale_to(zoomfac, zoomfac)
+        self._viewer.scale_to(zoomfac, zoomfac)
 
     def _pan(self, colc, rowc):
         """Pan to (colc, rowc)"""
 
-        self.display.set_pan(colc, rowc)
+        self._viewer.set_pan(colc, rowc)
 
     def XXX_getEvent(self):
         """Listen for a key press, returning (key, x, y)"""
@@ -277,7 +288,7 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         raise RuntimeError("Write me")
     
         k = '?'
-        x, y = self.display.get_pan()        
+        x, y = self._viewer.get_pan()        
 
         return GingaEvent(k, x, y)
 
