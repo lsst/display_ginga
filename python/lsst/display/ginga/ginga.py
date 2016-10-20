@@ -43,7 +43,7 @@ import lsst.afw.geom as afwGeom
 try:
     _maskTransparency
 except NameError:
-    _maskTransparency = None
+    _maskTransparency = 0.5
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -102,6 +102,9 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         self._canvas.enable_draw(False)
         self._viewer.ipg_parent.pixel_base = 0.0 # 0-indexed coordinates
 
+        global _maskTransparency
+        self._maskTransparency = _maskTransparency
+        
         # JPEG is faster, PNG looks better
         canvas_types = ('jpeg', 'png',)
         if canvas_format in canvas_types:
@@ -151,15 +154,19 @@ class DisplayImpl(virtualDevice.DisplayImpl):
                   file=sys.stderr)
             return
 
-    def _getMaskTransparency(self, maskplane):
+        self._maskTransparency = 0.01*transparency
+
+    def _getMaskTransparency(self, maskplane=None):
         """Return the current mask transparency"""
+        return self._maskTransparency
 
     def _mtv(self, image, mask=None, wcs=None, title=""):
         """Display an Image and/or Mask on a ginga display
         """
 
         self._erase()
-
+        self._canvas.delete_all_objects()
+        
         if image:
             # We'd call
             #   self._viewer.load_data(image.getArray())
@@ -177,7 +184,54 @@ class DisplayImpl(virtualDevice.DisplayImpl):
             self._viewer.set_image(astroImage)
 
         if mask:
-            print("Mask displays are not yet supported in Ginga")
+            import numpy as np
+            from matplotlib.colors import colorConverter
+            from ginga.RGBImage import RGBImage # 8 bpp RGB[A] images
+
+            # create a 3-channel RGB image + alpha
+            maskRGB = np.zeros((mask.getHeight(), mask.getWidth(), 4), dtype=np.uint8)
+            maska = mask.getArray()
+            nSet = np.zeros_like(maska, dtype='uint8')
+
+            R, G, B, A = 0, 1, 2, 3     # names for colours and alpha plane
+            colorGenerator = self.display.maskColorGenerator(omitBW=True)
+
+            for maskPlaneName, maskPlaneNum in mask.getMaskPlaneDict().items():
+                isSet = maska & (1 << maskPlaneNum) != 0
+                if (isSet == 0).all():  # no bits set; nowt to do
+                    continue
+                
+                color = self.display.getMaskPlaneColor(maskPlaneName)
+
+                if not color:            # none was specified
+                    color = next(colorGenerator)
+                elif color.lower() == "ignore":
+                    continue
+
+                r, g, b = colorConverter.to_rgb(color)
+                maskRGB[:, :, R][isSet] = 255*r
+                maskRGB[:, :, G][isSet] = 255*g
+                maskRGB[:, :, B][isSet] = 255*b
+
+                nSet[isSet] += 1
+
+            alpha = self.display.getMaskTransparency() # Bug!  Fails to return a value
+            if alpha is None:
+                alpha = self._getMaskTransparency()
+
+            maskRGB[:, :, A] = 255*(1 - alpha)
+            maskRGB[:, :, A][nSet == 0] = 0
+
+            nSet[nSet == 0] = 1         # avoid division by 0
+            for C in (R, G, B):
+                maskRGB[:, :, C] //= nSet
+
+            rgb_img = RGBImage(data_np=maskRGB)
+
+            Image = self._canvas.get_draw_class('image') # the appropriate class
+            maskImageRGBA = Image(0, 0, rgb_img)
+
+            self._canvas.add(maskImageRGBA)
     #
     # Graphics commands
     #
