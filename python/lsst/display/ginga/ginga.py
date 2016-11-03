@@ -94,7 +94,10 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         """
         if not DisplayImpl.server:
             DisplayImpl.server = ipg.make_server(host=host, port=port, use_opencv=use_opencv)
-            DisplayImpl.server.start(no_ioloop=no_ioloop)
+            try:
+                DisplayImpl.server.start(no_ioloop=no_ioloop)
+            except Exception as e:
+                print("Failed to start ginga server on %s:%d : %s" % (host, port, e))
 
         virtualDevice.DisplayImpl.__init__(self, display, verbose=False)
         self._viewer = DisplayImpl.server.get_viewer(str(display.frame))
@@ -128,13 +131,6 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         """
         return self._viewer
 
-    def shutdown_server(self):
-        """Shutdown the ginga server
-        """
-        if DisplayImpl.server:
-            DisplayImpl.server.stop()
-            DisplayImpl.server = None
-
     def show_color_bar(show=True):
         """Show (or hide) the colour bar"""
         self._viewer.show_color_bar(show)
@@ -144,8 +140,18 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         self._viewer.show_pan_mark(show, color)
 
     def _close(self):
-        """Called when the device is closed"""
-        pass
+        """Called when the device is closed
+        """
+        if hasattr(self, "_viewer"):
+            del self._viewer
+            del self._canvas
+
+    def _shutdownServer(self):
+        """Shutdown the ginga server
+        """
+        if DisplayImpl.server:
+            DisplayImpl.server.stop()
+            DisplayImpl.server = None
 
     def _setMaskTransparency(self, transparency, maskplane):
         """Specify mask transparency (percent); or None to not set it when loading masks"""
