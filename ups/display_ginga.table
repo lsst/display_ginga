@@ -1,1 +1,2 @@
 envPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)
+setupOptional(ginga)
