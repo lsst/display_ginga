@@ -100,7 +100,7 @@ class DisplayImpl(virtualDevice.DisplayImpl):
                 print("Failed to start ginga server on %s:%d : %s" % (host, port, e))
 
         virtualDevice.DisplayImpl.__init__(self, display, verbose=False)
-        self._viewer = DisplayImpl.server.get_viewer(str(display.frame))
+        self._viewer = DisplayImpl.server.get_viewer(str(display.frame) if display else None)
         self._canvas = self._viewer.add_canvas()
         self._canvas.enable_draw(False)
         self._viewer.ipg_parent.pixel_base = 0.0 # 0-indexed coordinates
