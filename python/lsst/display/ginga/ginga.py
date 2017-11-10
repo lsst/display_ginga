@@ -53,7 +53,6 @@ class GingaEvent(interface.Event):
 
 
 class DisplayImpl(virtualDevice.DisplayImpl):
-    server = None
 
     def __init__(self, display, verbose=False, dims=None,
                  canvas_format='jpeg',
