@@ -30,6 +30,7 @@ import sys
 
 import ipywidgets
 from ginga.web.jupyterw.ImageViewJpw import EnhancedCanvasView
+from ginga.misc.log import get_logger
 
 import lsst.afw.display.interface as interface
 import lsst.afw.display.virtualDevice as virtualDevice
@@ -70,7 +71,8 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         else:
             width, height = dims
         self._imageWidget = ipywidgets.Image(format=canvas_format, width=width, height=height)
-        self._viewer = EnhancedCanvasView()
+        logger = get_logger("ginga", log_stderr=True, level=40)
+        self._viewer = EnhancedCanvasView(logger=logger)
         self._viewer.set_widget(self._imageWidget)
         bd = self._viewer.get_bindings()
         bd.enable_all(True)
