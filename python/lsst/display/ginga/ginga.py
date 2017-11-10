@@ -20,7 +20,48 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-"""An afw.display backend that uses a Ginga embedded in a Jupyter widget.
+"""
+An afw.display backend that uses a Ginga viewer embedded in a Jupyter widget.
+
+Quick Start Instructions
+------------------------
+
+Install, via e.g. conda or pip:
+
+ - ipywidgets
+ - ipyevents
+ - ginga
+
+Register the Jupyter extensions with::
+
+    jupyter nbextension enable --py --sys-prefix widgetsnbextension
+    jupyter nbextension enable --py --sys-prefix ipyevents
+
+Launch a Jupyter notebook, start a kernel, and do::
+
+    import lsst.afw.display
+    lsst.afw.display.setDefaultBackend("ginga")
+    display = lsst.afw.display.Display(dims=(800, 600))  # size in screen pixels
+    display.embed()
+
+Make sure the last call is the last line in the cell whose output should
+contain the viewer (its return value needs to be what Jupyter sees as the
+"result" of the cell).
+
+You can then use regular afw.display commands (in other cells) to show images
+or other objects in that cell, and ginga's usual keyboard commands to pan, zoom,
+scale, etc. (see http://ginga.readthedocs.io/en/latest/quickref.html).
+
+Known Issues
+------------
+
+ - Mouse wheel scrolls vertically instead of zooming.
+
+ - Drawing a lot of vector graphics (e.g. using Display.dot on all objects in
+   a full-patch or full-sensor catalog) can bring things to a standstill - it's
+   not only slow to draw them, but the responsivity of the viewer tanks when
+   there are a lot of overlaid objects.
+
 """
 
 from __future__ import absolute_import, division, print_function
