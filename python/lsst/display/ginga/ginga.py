@@ -76,10 +76,13 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         self._viewer.set_widget(self._imageWidget)
         bd = self._viewer.get_bindings()
         bd.enable_all(True)
-        self._viewer.embed()
         self._canvas = self._viewer.add_canvas()
         self._canvas.enable_draw(False)
         self._maskTransparency = 0.8
+
+    def embed(self):
+        """Attach this display to the output of the current cell."""
+        return self._viewer.embed()
 
     #
     # Extensions to the API
