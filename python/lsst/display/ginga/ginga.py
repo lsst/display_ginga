@@ -119,6 +119,7 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         self._canvas = self._viewer.add_canvas()
         self._canvas.enable_draw(False)
         self._maskTransparency = 0.8
+        self._redraw = True
 
     def embed(self):
         """Attach this display to the output of the current cell."""
@@ -227,10 +228,10 @@ class DisplayImpl(virtualDevice.DisplayImpl):
     #
 
     def _buffer(self, enable=True):
-        pass
+        self._redraw = not enable
 
     def _flush(self):
-        pass
+        self._viewer.redraw(whence=3)
 
     def _erase(self):
         """Erase the display"""
@@ -258,10 +259,11 @@ class DisplayImpl(virtualDevice.DisplayImpl):
             Ellipse = self._canvas.get_draw_class('ellipse')
 
             self._canvas.add(Ellipse(c, r, xradius=symb.getA(), yradius=symb.getB(),
-                                     rot_deg=math.degrees(symb.getTheta()), color=ctype))
+                                     rot_deg=math.degrees(symb.getTheta()), color=ctype),
+                             redraw=self._redraw)
         elif symb == 'o':
             Circle = self._canvas.get_draw_class('circle')
-            self._canvas.add(Circle(c, r, radius=size, color=ctype))
+            self._canvas.add(Circle(c, r, radius=size, color=ctype), redraw=self._redraw)
         else:
             Line = self._canvas.get_draw_class('line')
             Text = self._canvas.get_draw_class('text')
@@ -273,10 +275,10 @@ class DisplayImpl(virtualDevice.DisplayImpl):
 
                 cmd, args = cmd[0], cmd[1:]
                 if cmd == "line":
-                    self._canvas.add(Line(*[float(p) - 1 for p in args], color=ctype))
+                    self._canvas.add(Line(*[float(p) - 1 for p in args], color=ctype), redraw=self._redraw)
                 elif cmd == "text":
                     x, y = [float(p) - 1 for p in args[0:2]]
-                    self._canvas.add(Text(x, y, symb, color=ctype))
+                    self._canvas.add(Text(x, y, symb, color=ctype), redraw=self._redraw)
                 else:
                     raise RuntimeError(ds9Cmd)
 
@@ -287,7 +289,7 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         Line = self._canvas.get_draw_class('line')
         p0 = points[0]
         for p in points[1:]:
-            self._canvas.add(Line(p0[0], p0[1], p[0], p[1], color=ctype))
+            self._canvas.add(Line(p0[0], p0[1], p[0], p[1], color=ctype), redraw=self._redraw)
             p0 = p
 
     #
