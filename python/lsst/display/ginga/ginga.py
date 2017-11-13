@@ -37,6 +37,10 @@ Register the Jupyter extensions with::
     jupyter nbextension enable --py --sys-prefix widgetsnbextension
     jupyter nbextension enable --py --sys-prefix ipyevents
 
+Optionally install from source:
+
+ - aggdraw, forked at https://github.com/ejeschke/aggdraw
+
 Launch a Jupyter notebook, start a kernel, and do::
 
     import lsst.afw.display
@@ -52,15 +56,25 @@ You can then use regular afw.display commands (in other cells) to show images
 or other objects in that cell, and ginga's usual keyboard commands to pan, zoom,
 scale, etc. (see http://ginga.readthedocs.io/en/latest/quickref.html).
 
+Note that to save the state of the image display widget for static rendering
+(e.g. in GitHub), the ipywidgets package adds a new menu to Jupyter that
+includes a "Save Widget State" option.
+
 Known Issues
 ------------
 
- - Mouse wheel scrolls vertically instead of zooming.
-
- - Drawing a lot of vector graphics (e.g. using Display.dot on all objects in
+ - Drawing a lot of ellipses (e.g. using Display.dot on all objects in
    a full-patch or full-sensor catalog) can bring things to a standstill - it's
    not only slow to draw them, but the responsivity of the viewer tanks when
-   there are a lot of overlaid objects.
+   there are a lot of overlaid objects.  This can be improved somewhat by using
+   circles instead of ellipses or installing aggdraw.
+
+ - Only the image itself is currently displayed, and hence interaction is
+   limited to mouse and keyboard commands.  This also means we can't even test
+   whether WCS information is being properly propagated, because we don't have
+   a way to see where the cursor is believed to be.
+
+ - Events and callbacks are not yet supported.
 
 """
 
