@@ -84,14 +84,12 @@ import math
 import sys
 
 import ipywidgets
-from ginga.web.jupyterw.ImageViewJpw import EnhancedCanvasView
-from ginga.misc.log import get_logger
-
+import lsst.afw.display.ds9Regions as ds9Regions
 import lsst.afw.display.interface as interface
 import lsst.afw.display.virtualDevice as virtualDevice
-import lsst.afw.display.ds9Regions as ds9Regions
-
 import lsst.afw.geom as afwGeom
+from ginga.misc.log import get_logger
+from ginga.web.jupyterw.ImageViewJpw import EnhancedCanvasView
 
 
 def gingaVersion():
@@ -189,8 +187,8 @@ class DisplayImpl(virtualDevice.DisplayImpl):
 
         if mask:
             import numpy as np
-            from matplotlib.colors import colorConverter
             from ginga.RGBImage import RGBImage  # 8 bpp RGB[A] images
+            from matplotlib.colors import colorConverter
 
             # create a 3-channel RGB image + alpha
             maskRGB = np.zeros((mask.getHeight(), mask.getWidth(), 4), dtype=np.uint8)
