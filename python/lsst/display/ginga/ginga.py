@@ -45,7 +45,7 @@ Launch a Jupyter notebook, start a kernel, and do::
 
     import lsst.afw.display
     lsst.afw.display.setDefaultBackend("ginga")
-    display = lsst.afw.display.Display(dims=(800, 600))  # size in screen pixels
+    display = lsst.afw.display.Display(dims=(800, 600)) # size in screen pixels
     display.embed()
 
 Make sure the last call is the last line in the cell whose output should
@@ -53,8 +53,8 @@ contain the viewer (its return value needs to be what Jupyter sees as the
 "result" of the cell).
 
 You can then use regular afw.display commands (in other cells) to show images
-or other objects in that cell, and ginga's usual keyboard commands to pan, zoom,
-scale, etc. (see http://ginga.readthedocs.io/en/latest/quickref.html).
+or other objects in that cell, and ginga's usual keyboard commands to pan,
+zoom, scale, etc. (see http://ginga.readthedocs.io/en/latest/quickref.html).
 
 Note that to save the state of the image display widget for static rendering
 (e.g. in GitHub), the ipywidgets package adds a new menu to Jupyter that
@@ -84,19 +84,18 @@ import math
 import sys
 
 import ipywidgets
-from ginga.web.jupyterw.ImageViewJpw import EnhancedCanvasView
-from ginga.misc.log import get_logger
-
+import lsst.afw.display.ds9Regions as ds9Regions
 import lsst.afw.display.interface as interface
 import lsst.afw.display.virtualDevice as virtualDevice
-import lsst.afw.display.ds9Regions as ds9Regions
-
 import lsst.afw.geom as afwGeom
+from ginga.misc.log import get_logger
+from ginga.web.jupyterw.ImageViewJpw import EnhancedCanvasView
 
 
 def gingaVersion():
     """Return the version of ginga in use, as a string"""
     from ginga.version import version
+
     return version
 
 
@@ -108,15 +107,12 @@ class GingaEvent(interface.Event):
 
 
 class DisplayImpl(virtualDevice.DisplayImpl):
-
-    def __init__(self, display, verbose=False, dims=None,
-                 canvas_format='jpeg',
-                 *args, **kwargs):
+    def __init__(self, display, verbose=False, dims=None, canvas_format="jpeg", *args, **kwargs):
         """
         Initialise a ginga display
 
-        canvas_type  file type for displays ('jpeg': fast; 'png' : better, slow)
-        dims         (x,y) dimensions of image display widget in screen pixels
+        canvas_type file type for displays ('jpeg': fast; 'png' : better, slow)
+        dims        (x,y) dimensions of image display widget in screen pixels
         """
         virtualDevice.DisplayImpl.__init__(self, display, verbose=False)
         if dims is None:
@@ -150,18 +146,21 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         """Show (or hide) the colour bar"""
         self._viewer.show_color_bar(show)
 
-    def show_pan_mark(self, show=True, color='red'):
+    def show_pan_mark(self, show=True, color="red"):
         """Show (or hide) the colour bar"""
         self._viewer.show_pan_mark(show, color)
 
     def _setMaskTransparency(self, transparency, maskplane):
-        """Specify mask transparency (percent); or None to not set it when loading masks"""
+        """Specify mask transparency (percent); or None to not set it when
+        loading masks"""
         if maskplane is not None:
-            print("display_ginga is not yet able to set transparency for individual maskplanes" % maskplane,
-                  file=sys.stderr)
+            print(
+                "display_ginga is not yet able to set transparency for individual maskplanes" % maskplane,
+                file=sys.stderr,
+            )
             return
 
-        self._maskTransparency = 0.01*transparency
+        self._maskTransparency = 0.01 * transparency
 
     def _getMaskTransparency(self, maskplane=None):
         """Return the current mask transparency"""
@@ -180,8 +179,7 @@ class DisplayImpl(virtualDevice.DisplayImpl):
             #
             from ginga import AstroImage
 
-            astroImage = AstroImage.AstroImage(logger=self._viewer.logger,
-                                               data_np=image.getArray())
+            astroImage = AstroImage.AstroImage(logger=self._viewer.logger, data_np=image.getArray())
             if wcs is not None:
                 astroImage.set_wcs(WcsAdaptorForGinga(wcs))
 
@@ -189,15 +187,15 @@ class DisplayImpl(virtualDevice.DisplayImpl):
 
         if mask:
             import numpy as np
-            from matplotlib.colors import colorConverter
             from ginga.RGBImage import RGBImage  # 8 bpp RGB[A] images
+            from matplotlib.colors import colorConverter
 
             # create a 3-channel RGB image + alpha
             maskRGB = np.zeros((mask.getHeight(), mask.getWidth(), 4), dtype=np.uint8)
             maska = mask.getArray()
-            nSet = np.zeros_like(maska, dtype='uint8')
+            nSet = np.zeros_like(maska, dtype="uint8")
 
-            R, G, B, A = 0, 1, 2, 3     # names for colours and alpha plane
+            R, G, B, A = 0, 1, 2, 3  # names for colours and alpha plane
             colorGenerator = self.display.maskColorGenerator(omitBW=True)
 
             for maskPlaneName, maskPlaneNum in mask.getMaskPlaneDict().items():
@@ -207,15 +205,15 @@ class DisplayImpl(virtualDevice.DisplayImpl):
 
                 color = self.display.getMaskPlaneColor(maskPlaneName)
 
-                if not color:            # none was specified
+                if not color:  # none was specified
                     color = next(colorGenerator)
                 elif color.lower() == "ignore":
                     continue
 
                 r, g, b = colorConverter.to_rgb(color)
-                maskRGB[:, :, R][isSet] = 255*r
-                maskRGB[:, :, G][isSet] = 255*g
-                maskRGB[:, :, B][isSet] = 255*b
+                maskRGB[:, :, R][isSet] = 255 * r
+                maskRGB[:, :, G][isSet] = 255 * g
+                maskRGB[:, :, B][isSet] = 255 * b
 
                 nSet[isSet] += 1
 
@@ -223,16 +221,16 @@ class DisplayImpl(virtualDevice.DisplayImpl):
             if alpha is None:
                 alpha = self._getMaskTransparency()
 
-            maskRGB[:, :, A] = 255*(1 - alpha)
+            maskRGB[:, :, A] = 255 * (1 - alpha)
             maskRGB[:, :, A][nSet == 0] = 0
 
-            nSet[nSet == 0] = 1         # avoid division by 0
+            nSet[nSet == 0] = 1  # avoid division by 0
             for C in (R, G, B):
                 maskRGB[:, :, C] //= nSet
 
             rgb_img = RGBImage(data_np=maskRGB)
 
-            Image = self._canvas.get_draw_class('image')  # the appropriate class
+            Image = self._canvas.get_draw_class("image")  # the appropriate class
             maskImageRGBA = Image(0, 0, rgb_img)
 
             self._canvas.add(maskImageRGBA)
@@ -259,8 +257,10 @@ class DisplayImpl(virtualDevice.DisplayImpl):
             x                Draw an x
             *                Draw a *
             o                Draw a circle
-            @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (argument size is ignored)
-            An object derived from afwGeom.ellipses.BaseCore Draw the ellipse (argument size is ignored)
+            @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy)
+                             (argument size is ignored)
+            An object derived from afwGeom.ellipses.BaseCore Draw the ellipse
+                             (argument size is ignored)
 
             Any other value is interpreted as a string to be drawn. Strings
             obey the fontFamily (which may be extended with other
@@ -270,22 +270,30 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         N.b. objects derived from BaseCore include Axes and Quadrupole.
         """
         if isinstance(symb, afwGeom.ellipses.BaseCore):
-            Ellipse = self._canvas.get_draw_class('ellipse')
+            Ellipse = self._canvas.get_draw_class("ellipse")
 
-            self._canvas.add(Ellipse(c, r, xradius=symb.getA(), yradius=symb.getB(),
-                                     rot_deg=math.degrees(symb.getTheta()), color=ctype),
-                             redraw=self._redraw)
-        elif symb == 'o':
-            Circle = self._canvas.get_draw_class('circle')
+            self._canvas.add(
+                Ellipse(
+                    c,
+                    r,
+                    xradius=symb.getA(),
+                    yradius=symb.getB(),
+                    rot_deg=math.degrees(symb.getTheta()),
+                    color=ctype,
+                ),
+                redraw=self._redraw,
+            )
+        elif symb == "o":
+            Circle = self._canvas.get_draw_class("circle")
             self._canvas.add(Circle(c, r, radius=size, color=ctype), redraw=self._redraw)
         else:
-            Line = self._canvas.get_draw_class('line')
-            Text = self._canvas.get_draw_class('text')
+            Line = self._canvas.get_draw_class("line")
+            Text = self._canvas.get_draw_class("text")
 
             for ds9Cmd in ds9Regions.dot(symb, c, r, size, fontFamily="helvetica", textAngle=None):
-                tmp = ds9Cmd.split('#')
+                tmp = ds9Cmd.split("#")
                 cmd = tmp.pop(0).split()
-                comment = tmp.pop(0) if tmp else ""
+                comment = tmp.pop(0) if tmp else ""  # noqa: F841
 
                 cmd, args = cmd[0], cmd[1:]
                 if cmd == "line":
@@ -300,7 +308,7 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         """Connect the points, a list of (col,row)
         Ctype is the name of a colour (e.g. 'red')
         """
-        Line = self._canvas.get_draw_class('line')
+        Line = self._canvas.get_draw_class("line")
         p0 = points[0]
         for p in points[1:]:
             self._canvas.add(Line(p0[0], p0[1], p[0], p[1], color=ctype), redraw=self._redraw)
@@ -310,14 +318,14 @@ class DisplayImpl(virtualDevice.DisplayImpl):
     # Set gray scale
     #
     def _scale(self, algorithm, min, max, unit, *args, **kwargs):
-        self._viewer.set_color_map('gray')
+        self._viewer.set_color_map("gray")
         self._viewer.set_color_algorithm(algorithm)
 
         if min == "zscale":
-            self._viewer.set_autocut_params('zscale', contrast=0.25)
+            self._viewer.set_autocut_params("zscale", contrast=0.25)
             self._viewer.auto_levels()
         elif min == "minmax":
-            self._viewer.set_autocut_params('minmax')
+            self._viewer.set_autocut_params("minmax")
             self._viewer.auto_levels()
         else:
             if unit:
@@ -328,7 +336,8 @@ class DisplayImpl(virtualDevice.DisplayImpl):
     def _show(self):
         """Show the requested display
 
-        In this case, embed it in the notebook (equivalent to Display.get_viewer().show();
+        In this case, embed it in the notebook (equivalent to
+        ``Display.get_viewer().show()``;
         see also Display.get_viewer().embed()
 
         N.b.  These command *must* be the last entry in their cell
@@ -349,7 +358,7 @@ class DisplayImpl(virtualDevice.DisplayImpl):
     def XXX_getEvent(self):
         """Listen for a key press, returning (key, x, y)"""
         raise RuntimeError("Write me")
-        k = '?'
+        k = "?"
         x, y = self._viewer.get_pan()
         return GingaEvent(k, x, y)
 
@@ -360,16 +369,17 @@ class WcsAdaptorForGinga(object):
     def __init__(self, wcs):
         self._wcs = wcs
 
-    def pixtoradec(self, idxs, coords='data'):
+    def pixtoradec(self, idxs, coords="data"):
         """Return (ra, dec) in degrees given a position in pixels"""
         ra, dec = self._wcs.pixelToSky(*idxs)
 
         return ra.asDegrees(), dec.asDegrees()
 
-    def pixtosystem(self, idxs, system=None, coords='data'):
-        """I'm not sure if ginga really needs this; equivalent to self.pixtoradec()"""
+    def pixtosystem(self, idxs, system=None, coords="data"):
+        """I'm not sure if ginga really needs this; equivalent to
+        self.pixtoradec()"""
         return self.pixtoradec(idxs, coords=coords)
 
-    def radectopix(self, ra_deg, dec_deg, coords='data', naxispath=None):
+    def radectopix(self, ra_deg, dec_deg, coords="data", naxispath=None):
         """Return (x, y) in pixels given (ra, dec) in degrees"""
-        return self._wcs.skyToPixel(ra_deg*afwGeom.degrees, dec_deg*afwGeom.degrees)
+        return self._wcs.skyToPixel(ra_deg * afwGeom.degrees, dec_deg * afwGeom.degrees)
