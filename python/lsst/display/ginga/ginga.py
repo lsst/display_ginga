@@ -45,7 +45,7 @@ Launch a Jupyter notebook, start a kernel, and do::
 
     import lsst.afw.display
     lsst.afw.display.setDefaultBackend("ginga")
-    display = lsst.afw.display.Display(dims=(800, 600))  # size in screen pixels
+    display = lsst.afw.display.Display(dims=(800, 600)) # size in screen pixels
     display.embed()
 
 Make sure the last call is the last line in the cell whose output should
@@ -53,8 +53,8 @@ contain the viewer (its return value needs to be what Jupyter sees as the
 "result" of the cell).
 
 You can then use regular afw.display commands (in other cells) to show images
-or other objects in that cell, and ginga's usual keyboard commands to pan, zoom,
-scale, etc. (see http://ginga.readthedocs.io/en/latest/quickref.html).
+or other objects in that cell, and ginga's usual keyboard commands to pan,
+zoom, scale, etc. (see http://ginga.readthedocs.io/en/latest/quickref.html).
 
 Note that to save the state of the image display widget for static rendering
 (e.g. in GitHub), the ipywidgets package adds a new menu to Jupyter that
@@ -111,8 +111,8 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         """
         Initialise a ginga display
 
-        canvas_type  file type for displays ('jpeg': fast; 'png' : better, slow)
-        dims         (x,y) dimensions of image display widget in screen pixels
+        canvas_type file type for displays ('jpeg': fast; 'png' : better, slow)
+        dims        (x,y) dimensions of image display widget in screen pixels
         """
         virtualDevice.DisplayImpl.__init__(self, display, verbose=False)
         if dims is None:
@@ -151,7 +151,8 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         self._viewer.show_pan_mark(show, color)
 
     def _setMaskTransparency(self, transparency, maskplane):
-        """Specify mask transparency (percent); or None to not set it when loading masks"""
+        """Specify mask transparency (percent); or None to not set it when
+        loading masks"""
         if maskplane is not None:
             print(
                 "display_ginga is not yet able to set transparency for individual maskplanes" % maskplane,
@@ -256,8 +257,10 @@ class DisplayImpl(virtualDevice.DisplayImpl):
             x                Draw an x
             *                Draw a *
             o                Draw a circle
-            @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (argument size is ignored)
-            An object derived from afwGeom.ellipses.BaseCore Draw the ellipse (argument size is ignored)
+            @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy)
+                             (argument size is ignored)
+            An object derived from afwGeom.ellipses.BaseCore Draw the ellipse
+                             (argument size is ignored)
 
             Any other value is interpreted as a string to be drawn. Strings
             obey the fontFamily (which may be extended with other
@@ -290,7 +293,7 @@ class DisplayImpl(virtualDevice.DisplayImpl):
             for ds9Cmd in ds9Regions.dot(symb, c, r, size, fontFamily="helvetica", textAngle=None):
                 tmp = ds9Cmd.split("#")
                 cmd = tmp.pop(0).split()
-                comment = tmp.pop(0) if tmp else ""
+                comment = tmp.pop(0) if tmp else ""  # noqa: F841
 
                 cmd, args = cmd[0], cmd[1:]
                 if cmd == "line":
@@ -333,7 +336,8 @@ class DisplayImpl(virtualDevice.DisplayImpl):
     def _show(self):
         """Show the requested display
 
-        In this case, embed it in the notebook (equivalent to Display.get_viewer().show();
+        In this case, embed it in the notebook (equivalent to
+        ``Display.get_viewer().show()``;
         see also Display.get_viewer().embed()
 
         N.b.  These command *must* be the last entry in their cell
@@ -372,7 +376,8 @@ class WcsAdaptorForGinga(object):
         return ra.asDegrees(), dec.asDegrees()
 
     def pixtosystem(self, idxs, system=None, coords="data"):
-        """I'm not sure if ginga really needs this; equivalent to self.pixtoradec()"""
+        """I'm not sure if ginga really needs this; equivalent to
+        self.pixtoradec()"""
         return self.pixtoradec(idxs, coords=coords)
 
     def radectopix(self, ra_deg, dec_deg, coords="data", naxispath=None):
