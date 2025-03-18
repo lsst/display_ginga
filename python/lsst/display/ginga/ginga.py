@@ -166,7 +166,7 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         """Return the current mask transparency"""
         return self._maskTransparency
 
-    def _mtv(self, image, mask=None, wcs=None, title=""):
+    def _mtv(self, image, mask=None, wcs=None, title="", metadata=None):
         """Display an Image and/or Mask on a ginga display"""
         self._erase()
         self._canvas.delete_all_objects()
